@@ -1,10 +1,13 @@
 服务器信息：
 ip:121.4.94.83
-账号：root
-密码：Liu10141
-宝塔信息：http://121.4.94.83:8888/77a6b4c1
+账号:root
+密码:Liu10141
+宝塔信息：http://121.4.94.83:8888/match
 账号：match 密码：liu10141
 小程序信息：
 appid: wx60d214a9d968772b
 secert: 8a43eb9d788d0072fca6d4a920c8d02c
 域名：api.izhaijidi.com
+FTP:
+账号:match
+密码:liu10141
