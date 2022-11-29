@@ -28,113 +28,6 @@ class Index extends Controller
         die;
     }
 
-    /**
-     * 上传数据
-     */
-    public function CheckCode()
-    {
-        $params = input('post.');
-        $data = json_decode($params['paramaters'], true);
-        $userinfo = explode('-', $data['CodeVal']);
-        if ($data['CodeType'] == 'C') {
-            $CodeVal = explode('-', $data['CodeVal'])[0];
-            $cardArray = [
-                '310108198106041050',
-                '322032579','322388739','322002915','293108531'];
-            if (in_array($CodeVal, $cardArray)) {
-                $jsonArray = [
-                    'UID' => $data['UID'],
-                    'Relay1Time' => 1000,
-                    'Status' => 1,
-                ];
-                $this->saveDoorLog($CodeVal, $data['SN'], 2,1);
-                echo json_encode($jsonArray);
-                die;
-            }else{
-                $jsonArray = [
-                    'UID' => $data['UID'],
-                    'Status' => 0,
-                    'MsgCode' => 11,
-                ];
-                $this->saveDoorLog($CodeVal, $data['SN'], $data['CodeType'], 3);
-                echo json_encode($jsonArray);
-                die;
-            }
-        }
-
-        if ($data['IsOnline'] == 0) {
-            $jsonArray = [
-                'UID' => $data['UID'],
-                'Status' => 255,
-            ];
-            echo json_encode($jsonArray);
-            die;
-
-        }
-        if ($userinfo[0] < time()) {
-            $jsonArray = [
-                'UID' => $data['UID'],
-                'Status' => 0,
-                'MsgCode' => 11,
-            ];
-            $this->saveDoorLog($userinfo[1], $data['SN'], $data['CodeType'], 3);
-            echo json_encode($jsonArray);
-            die;
-        }
-        $vip_time_out = Db::name('user')
-            ->where('id', (int)$userinfo[1])
-            ->value('vip_time_out');
-        if ($vip_time_out < time()) {
-            $jsonArray = [
-                'UID' => $data['UID'],
-                'Status' => 0,
-                'MsgCode' => 11,
-            ];
-            $this->saveDoorLog($userinfo[1], $data['SN'], $data['CodeType'], 2);
-            echo json_encode($jsonArray);
-            die;
-        }
-        $jsonArray = [
-            'UID' => $data['UID'],
-            'Status' => 1,
-        ];
-        $this->saveDoorLog($userinfo[1], $data['SN'], $data['CodeType'], 1);
-        echo json_encode($jsonArray);
-        die;
-    }
-
-    /**
-     * 心跳检测
-     */
-    public function IsConnect()
-    {
-        $jsonArray = [
-            'DateTime' => date('Y-m-d H:i:s'),
-        ];
-        echo json_encode($jsonArray);
-        die;
-    }
-
-    /**
-     * 开门记录
-     * 1 合法
-     * 2 非法
-     * 3 过期
-     */
-    public function saveDoorLog($user_id, $sn, $code_type, $status)
-    {
-        $data = [
-            'user_id' => $user_id,
-            'sn' => $sn,
-            'code_type' => $code_type,
-            'status' => $status,
-            'create_time' => date('Y-m-d H:i:s'),
-            'update_time' => date('Y-m-d H:i:s'),
-        ];
-        Db::name('door_log')->insert($data);
-        return true;
-
-    }
 
     /**
      * @throws \think\db\exception\DataNotFoundException
@@ -143,7 +36,7 @@ class Index extends Controller
      * 获取洗车店列表
      * 循环判断出当前位置距离门店的距离
      */
-    public function getShop()
+    public function getMatch()
     {
 
         if (empty($_GET['lat']) && empty($_GET['lng'])) {
@@ -210,62 +103,6 @@ class Index extends Controller
         }
         array_multisort($key_arr, $order, $arr);
         return $arr;
-    }
-
-
-    /**
-     * 洗车店详情
-     */
-    public function getShopDetails()
-    {
-        $shopInfoList = Db::name('shop')
-            ->where('status', 1)
-            ->where('id', $_GET['shop_id'])
-            ->field('create_time,update_time,sort,status', true)
-            ->find();
-        echo show(config('code.success'), '门店详情', $shopInfoList);
-        unset($shopInfoList);
-        die;
-    }
-
-    /**
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
-     * 设置会员价格以及权益
-     */
-    public function getVipPrice()
-    {
-        $vipInfo = Db::name('vip')
-            ->where('status', 1)
-            ->field('create_time,update_time,status', true)
-            ->find();
-        $price = $vipInfo['const_price'];
-//        if (strtotime($vipInfo['end_time']) > time()) {
-//            $price = $vipInfo['price'];
-//        } else {
-//            $price = $vipInfo['const_price'];
-//        }
-        echo show(config('code.success'), '会员列表', ['price' => $price]);
-        unset($BuildFlimList);
-        die;
-    }
-
-    /**
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
-     * 权益描述轮播
-     */
-    public function getVipDesc()
-    {
-        $VipDesc = Db::name('vip_desc')
-            ->where('status', 1)
-            ->field('create_time,update_time,status', true)
-            ->find();
-        echo show(config('code.success'), '会员权益', $VipDesc);
-        unset($VipDesc);
-        die;
     }
 
     /**
